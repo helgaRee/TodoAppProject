@@ -2,17 +2,22 @@
 using Infrastructure.Entities;
 using Infrastructure.Services;
 using System.Diagnostics.Eventing.Reader;
+using System.Threading.Tasks;
 
 namespace Presentation.ConsoleApp;
 
 public class ConsoleUI
 {
     private readonly TaskService _taskService;
+    private readonly CategoryService _categoryService;
 
-    public ConsoleUI(TaskService taskService)
+    public ConsoleUI(TaskService taskService, CategoryService categoryService)
     {
         _taskService = taskService;
+        _categoryService = categoryService;
     }
+
+
 
 
     //Metod - visar användarmenyn
@@ -31,7 +36,8 @@ public class ConsoleUI
             Console.WriteLine($"{"2.",-3} Visa dina todos");
             Console.WriteLine($"{"3.",-3} Ändra en todo");
             Console.WriteLine($"{"4.",-3} Ta bort en todo");
-            Console.WriteLine($"{"5.",-3} Avsluta programmet");
+            Console.WriteLine($"{"5.",-3} Visa kategorier");
+            Console.WriteLine($"{"6.",-3} Avsluta programmet");
             Console.WriteLine("");
             Console.WriteLine("-------------------------------");
 
@@ -53,6 +59,9 @@ public class ConsoleUI
                     await DeleteTask_UIAsync();
                     break;
                 case "5":
+                    await DeleteCategory_UIAsync();
+                    break;
+                case "6":
                     await ExitProgramAsync();
                     break;
                 default:
@@ -63,7 +72,10 @@ public class ConsoleUI
         }
     }
 
-
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public async Task CreateTask_UIAsync()
     {
         var dto = new TaskUpdateDto();
@@ -125,13 +137,63 @@ public class ConsoleUI
             Console.ReadKey();
         }
     }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public async Task GetCatetories_UIAsync()
+    {
+        Console.Clear();
+        await DisplayTitleAsync("Kategorier");
+        var categories = await _categoryService.GetCategoriesAsync();
+        Console.Clear();
+        await DisplayTitleAsync("Skapade kategorier");
 
+        if (categories.Any())
+        {
+            foreach (var category in categories)
+            {
+                Console.WriteLine(category);
+            }
+            Console.WriteLine("");
+            Console.WriteLine("---------------------------------------");
+            Console.WriteLine($" * Ange 'Delete' för att ta bort\n * Ange 'Details' för att öppna en kategori\n * Tryck enter för att återgå till menyn.");
+            string userChoice = Console.ReadLine()!;
+
+            switch (userChoice.ToLower())
+            {
+                case "delete":
+                    await DeleteCategory_UIAsync();
+                    Console.ReadKey();
+                    break;
+                case "details":
+                    await GetTasksFromCategoryAsync();
+                    Console.ReadKey();
+                    break;
+                default:
+                    Console.WriteLine($"Du skickas tillbaka till menyn.");
+                    break;
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Det finns inga uppgifter i listan.\nTryck enter för att återgå till huvudmenyn.");
+        }
+        Console.ReadKey();
+
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public async Task GetTasks_UIAsync()
     {
         Console.Clear();
         await DisplayTitleAsync("Registrerade todos");
         var tasks = await _taskService.GetTasksAsync();
-            Console.Clear();
+        Console.Clear();
         await DisplayTitleAsync("Registrerade todos");
 
 
@@ -169,6 +231,10 @@ public class ConsoleUI
         Console.ReadKey();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     public async Task GetDetailsTaskAsync()
     {
         await DisplayTitleAsync("Granska en uppgift");
@@ -223,7 +289,7 @@ public class ConsoleUI
     {
         Console.Clear();
         await DisplayTitleAsync("Uppdatera en uppgift");
-       
+
         while (true)
         {
             var tasks = await _taskService.GetTasksAsync();
@@ -259,7 +325,7 @@ public class ConsoleUI
                 Console.WriteLine($"Adress: {selectedTask.StreetName}");
                 Console.WriteLine($"Postkod: {selectedTask.PostalCode}");
                 Console.WriteLine($"Stad: {selectedTask.City}");
- 
+
                 Console.WriteLine("");
                 Console.WriteLine("----------------------------------------");
 
@@ -364,63 +430,61 @@ public class ConsoleUI
                         Console.WriteLine("Ogiltigt val.");
                         break;
                 }
-            
 
-            var updatedTask = new TaskUpdateDto
-            {
-                Id = selectedTask.Id,
-                Title = selectedTask.Title,
-                Description = selectedTask.Description!,
-                Deadline = selectedTask.Deadline!,
-                Status = selectedTask.Status!,
-                CategoryName = selectedTask.CategoryName,
-                IsPrivate = selectedTask.IsPrivate,
-                PriorityLevel = selectedTask.PriorityLevel,
-                LocationName = selectedTask.LocationName,
-                StreetName = selectedTask.StreetName,
-                City = selectedTask.City,
-                PostalCode = selectedTask.PostalCode,
-            };
-            var updated = await _taskService.UpdateTaskAsync(updatedTask);
 
-            if (updated != null)
-            {
-                Console.Clear();
-                Console.WriteLine("Uppgiften har uppdaterats.");
+                var updatedTask = new TaskUpdateDto
+                {
+                    Id = selectedTask.Id,
+                    Title = selectedTask.Title,
+                    Description = selectedTask.Description!,
+                    Deadline = selectedTask.Deadline!,
+                    Status = selectedTask.Status!,
+                    CategoryName = selectedTask.CategoryName,
+                    IsPrivate = selectedTask.IsPrivate,
+                    PriorityLevel = selectedTask.PriorityLevel,
+                    LocationName = selectedTask.LocationName,
+                    StreetName = selectedTask.StreetName,
+                    City = selectedTask.City,
+                    PostalCode = selectedTask.PostalCode,
+                };
+                var updated = await _taskService.UpdateTaskAsync(updatedTask);
+
+                if (updated != null)
+                {
+                    Console.Clear();
+                    Console.WriteLine("Uppgiften har uppdaterats.");
+                }
+                else
+                {
+                    Console.WriteLine("Något gick fel. Uppgiften kunde inte uppdateras.");
+                }
             }
             else
             {
-                Console.WriteLine("Något gick fel. Uppgiften kunde inte uppdateras.");
+                Console.WriteLine($"Det finns ingen uppgift med titeln \"{selectedTitle}\".");
             }
-        }
-        else
-        {
-            Console.WriteLine($"Det finns ingen uppgift med titeln \"{selectedTitle}\".");
-        }
         }
     }
 
-
-    public async Task DeleteTask_UIAsync()
+    public async Task DeleteCategory_UIAsync()
     {
         Console.Clear();
 
-        await DisplayTitleAsync("Ta bort en uppgift");
+        await DisplayTitleAsync("Ta bort en kategori");
 
-        var tasks = await _taskService.GetTasksAsync();
+        var categories = await _categoryService.GetCategoriesAsync();
 
-        if (tasks.Any())
+        if (categories.Any())
         {
-            Console.WriteLine("Befintliga uppgifter");
+            Console.WriteLine("Befintliga Kategorier");
             Console.WriteLine("\n");
 
-            foreach (var task in tasks)
+            foreach (var category in categories)
             {
-                Console.WriteLine($"{task.CategoryName} {task.Title} {task.Status}");
+                Console.WriteLine($"* {category.CategoryName}\n");
             }
-
             Console.WriteLine("\n");
-            Console.WriteLine("Ange titel för den uppgift du vill ta bort, eller enter för att gå tillbaka till menyn.");
+            Console.WriteLine("Ange vilken kategori du vill ta bort, eller enter för att gå tillbaka till menyn.");
             string userInput = Console.ReadLine()!;
 
             Console.WriteLine("Ångrat dig? Ange 'avbryt'");
@@ -434,97 +498,160 @@ public class ConsoleUI
             {
                 if (!string.IsNullOrEmpty(userInput))
                 {
-                    var taskToDelete = tasks.FirstOrDefault(task => task.Title.Equals(userInput, StringComparison.OrdinalIgnoreCase));
+                    var categoryToDelete = categories.FirstOrDefault(category => category.CategoryName.Equals(userInput, StringComparison.OrdinalIgnoreCase));
 
-                    if (taskToDelete != null)
+                    if (categoryToDelete != null)
                     {
                         Console.Clear();
-                        bool deleteSuccess = await _taskService.DeleteTaskAsync(taskToDelete.Id);
+                        bool deleteSuccess = await _categoryService.DeleteCategoryAsync(categoryToDelete.Id);
 
 
                         if (deleteSuccess)
                         {
-                            Console.WriteLine($"Uppgiften med titeln '{taskToDelete.Title}' har tagits bort.");
+                            Console.WriteLine($"Kategorin '{categoryToDelete.CategoryName}' har tagits bort.");
                         }
                         else
                         {
-                            Console.WriteLine($"Något gick fel. Uppgiften med titeln '{taskToDelete.Title}' hittades inte eller kunde inte tas bort.");
+                            Console.WriteLine($"Något gick fel. Kategorin '{categoryToDelete.CategoryName}' hittades inte eller kunde inte tas bort.");
                         }
                     }
                     else
                     {
-                        Console.WriteLine($"Ingen uppgift med titeln '{userInput}' hittades.");
+                        Console.WriteLine($"Ingen kategori med namnet '{userInput}' hittades.");
                     }
 
                 }
-                else
-                {
-                    Console.WriteLine($"Felaktig inmatning, du skickas tillbaka till huvudmenyn..");
-                }
+
             }
         }
-        else
-        {
-            Console.WriteLine($"Det finns inga uppgifter inlaggda i appen.\nTryck enter för att återgå till huvudmenyn.");
-        }
     }
 
-    public async Task ExitProgramAsync()
-    {
-        Console.Clear();
-        await DisplayTitleAsync("Stäng av programmet");
 
-        Console.WriteLine($"Är du säker på att du vill avsluta? (ja/nej)");
-        string userOption = Console.ReadLine()?.ToLower()!;
-
-        if (userOption != "ja")
-        {
-            Console.WriteLine($"Tryck enter för att gå tillbaka till huvudmenyn.");
-        }
-        if (userOption != "ja" && userOption != "nej")
+        public async Task DeleteTask_UIAsync()
         {
             Console.Clear();
-            Console.WriteLine($"Ops, nu blev det fel.. du skickas tillbaka till menyn.");
+
+            await DisplayTitleAsync("Ta bort en uppgift");
+
+            var tasks = await _taskService.GetTasksAsync();
+
+            if (tasks.Any())
+            {
+                Console.WriteLine("Befintliga uppgifter");
+                Console.WriteLine("\n");
+
+                foreach (var task in tasks)
+                {
+                    Console.WriteLine($"{task.CategoryName} {task.Title} {task.Status}");
+                }
+
+                Console.WriteLine("\n");
+                Console.WriteLine("Ange titel för den uppgift du vill ta bort, eller enter för att gå tillbaka till menyn.");
+                string userInput = Console.ReadLine()!;
+
+                Console.WriteLine("Ångrat dig? Ange 'avbryt'");
+                string cancelOption = Console.ReadLine()?.ToLower()!;
+
+                if (cancelOption == "avbryt")
+                {
+                    await ReturnToMenuAsync();
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(userInput))
+                    {
+                        var taskToDelete = tasks.FirstOrDefault(task => task.Title.Equals(userInput, StringComparison.OrdinalIgnoreCase));
+
+                        if (taskToDelete != null)
+                        {
+                            Console.Clear();
+                            bool deleteSuccess = await _taskService.DeleteTaskAsync(taskToDelete.Id);
+
+
+                            if (deleteSuccess)
+                            {
+                                Console.WriteLine($"Uppgiften med titeln '{taskToDelete.Title}' har tagits bort.");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Något gick fel. Uppgiften med titeln '{taskToDelete.Title}' hittades inte eller kunde inte tas bort.");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Ingen uppgift med titeln '{userInput}' hittades.");
+                        }
+
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Felaktig inmatning, du skickas tillbaka till huvudmenyn..");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Det finns inga uppgifter inlaggda i appen.\nTryck enter för att återgå till huvudmenyn.");
+            }
         }
-        else
+
+        public async Task ExitProgramAsync()
         {
-            Environment.Exit(0);
+            Console.Clear();
+            await DisplayTitleAsync("Stäng av programmet");
+
+            Console.WriteLine($"Är du säker på att du vill avsluta? (ja/nej)");
+            string userOption = Console.ReadLine()?.ToLower()!;
+
+            if (userOption != "ja")
+            {
+                Console.WriteLine($"Tryck enter för att gå tillbaka till huvudmenyn.");
+            }
+            if (userOption != "ja" && userOption != "nej")
+            {
+                Console.Clear();
+                Console.WriteLine($"Ops, nu blev det fel.. du skickas tillbaka till menyn.");
+            }
+            else
+            {
+                Environment.Exit(0);
+            }
+
         }
 
-    }
-
-    /// <summary>
-    /// Display title for each method
-    /// </summary>
-    /// <param name="title">Specific title, type of a string</param>
-    /// <returns>A specific title for each method</returns>
-    public async Task DisplayTitleAsync(string title)
-    {
-        Console.Clear();
-        Console.WriteLine($"{"",-50}## Todo App ##");
-        Console.WriteLine("");
-        Console.WriteLine($"## {title} ##");
-        Console.WriteLine("---------------------------------------");
-        Console.WriteLine("");
-    }
-
-
-    /// <summary>
-    /// Return to main menu
-    /// </summary>
-    /// <param name=""></param>
-    /// <returns>Returning to main menu</returns>
-    public async Task ReturnToMenuAsync()
-    {
-        Console.WriteLine("");
-        Console.WriteLine($"Ange 'meny' för att gå tillbaka.");
-        string userChoice = Console.ReadLine() ?? "";
-
-        if (userChoice.ToLower() == "meny")
+        /// <summary>
+        /// Display title for each method
+        /// </summary>
+        /// <param name="title">Specific title, type of a string</param>
+        /// <returns>A specific title for each method</returns>
+        public async Task DisplayTitleAsync(string title)
         {
-            // Console.ReadKey();
-            Console.WriteLine($"Du skickas tillbaka till huvudmenyn.");
+            Console.Clear();
+            Console.WriteLine($"{"",-50}## Todo App ##");
+            Console.WriteLine("");
+            Console.WriteLine($"## {title} ##");
+            Console.WriteLine("---------------------------------------");
+            Console.WriteLine("");
         }
+
+
+        /// <summary>
+        /// Return to main menu
+        /// </summary>
+        /// <param name=""></param>
+        /// <returns>Returning to main menu</returns>
+        public async Task ReturnToMenuAsync()
+        {
+            Console.WriteLine("");
+            Console.WriteLine($"Ange 'meny' för att gå tillbaka.");
+            string userChoice = Console.ReadLine() ?? "";
+
+            if (userChoice.ToLower() == "meny")
+            {
+                // Console.ReadKey();
+                Console.WriteLine($"Du skickas tillbaka till huvudmenyn.");
+            }
+        }
+
     }
 
-}

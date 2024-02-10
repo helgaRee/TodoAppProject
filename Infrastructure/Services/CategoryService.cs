@@ -83,10 +83,13 @@ public class CategoryService(CategoryRepository categoryRepository)
         return null!;
     }
 
-    public async Task<bool> DeleteCategoryAsync(Expression<Func<CategoryEntity, bool>> expression)
+    public async Task<bool> DeleteCategoryAsync(int categoryId)
     {
         try
         {
+            // Skapa ett uttryck för att matcha kategori-ID:t
+            Expression<Func<CategoryEntity, bool>> expression = c => c.Id == categoryId;
+
             var result = await _categoryRepository.DeleteAsync(expression);
             return result;
         }
