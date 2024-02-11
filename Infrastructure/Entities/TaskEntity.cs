@@ -23,13 +23,11 @@ public class TaskEntity
     public string? Status { get; set; }
 
 
-
     public int? LocationId { get; set; }
     public virtual LocationEntity? Location { get; set; } = null!;
 
     public int PriorityId { get; set; }
     public virtual PriorityEntity? Priority { get; set; } = null!;
-
 
     [Required]
     public Guid UserId { get; set; }

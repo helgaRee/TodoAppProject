@@ -1,7 +1,6 @@
 ﻿using Infrastructure.Dtos;
 using Infrastructure.Entities;
 using Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using System.Diagnostics;
 using System.Linq.Expressions;
 
@@ -9,32 +8,31 @@ namespace Infrastructure.Services;
 
 public class UserService(UserRepository userRepository)
 {
-    //Läs ut repo
+
     private readonly UserRepository _userRepository = userRepository;
 
-    //vill returnera en Dto som inte har skapats än!
+    /// <summary>
+    /// Creates a new user if there is no user with a specific email already.
+    /// </summary>
+    /// <param name="userRegistrationDto"></param>
+    /// <returns>Returns a UserDto if created, else null.</returns>
     public async Task<UserDto> CreateUserAsync(UserRegistrationDto userRegistrationDto)
     {
         try
         {
-            //kolla först om det redan finns en user, isåfall hämta den! annars skapa ny
             if (!await _userRepository.ExistingAsync(x => x.Email == userRegistrationDto.Email))
             {
-                //finns inte usern, skapa en ny. ID skapas automatiskt
                 var userEntity = new UserEntity
                 {
                     UserName = userRegistrationDto.UserName,
                     Email = userRegistrationDto.Email,
                     Password = userRegistrationDto.Password,
                 };
-
-                // Skapa en UserDto och fyll den med användaruppgifterna
                 var userDto = new UserDto(
-                    Id: userEntity.Id, // Namngiven parameterlista
+                    Id: userEntity.Id, 
                     UserName: userEntity.UserName,
                     Email: userEntity.Email
                 );
-
                 return userDto;
             }
         }
@@ -45,6 +43,11 @@ public class UserService(UserRepository userRepository)
         return null!;
     }
 
+    /// <summary>
+    /// Gets a specific user.
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <returns>Returns a UserDto, else null.</returns>
     public async Task<UserDto> GetUserAsync(Expression<Func<UserEntity, bool>> expression)
     {
         try
@@ -53,7 +56,7 @@ public class UserService(UserRepository userRepository)
             if (userEntity != null)
             {
                 var userDto = new UserDto(
-                    Id: userEntity.Id, // Namngiven parameterlista
+                    Id: userEntity.Id,
                     UserName: userEntity.UserName,
                     Email: userEntity.Email
                 );
@@ -67,6 +70,10 @@ public class UserService(UserRepository userRepository)
         return null!;
     }
 
+    /// <summary>
+    /// Gets all the users from database and converts each to a UserDto.
+    /// </summary>
+    /// <returns>A list of UserDto's, else null.</returns>
     public async Task<IEnumerable<UserDto>> GetUsersAsync()
     {
         try
@@ -79,8 +86,7 @@ public class UserService(UserRepository userRepository)
                 foreach(var userEntity in userEntities)            
                     list.Add(new UserDto(userEntity.Id, userEntity.UserName, userEntity.Email));
 
-                    return list;
-                
+                    return list;              
             }
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
@@ -88,18 +94,20 @@ public class UserService(UserRepository userRepository)
     }
 
 
+    /// <summary>
+    /// Updates an existing user in database.
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns>Returns an updated UserDto, else null.</returns>
     public async Task<UserDto> UpdateUser(UpdateUserDto dto)
     {
         try
         {
-
-            //skapa en ny user för uppdatering
             var userEntity = new UserEntity { Id = dto.Id, UserName = dto.UserName, Email = dto.Email };
 
              var updatedUserEntity = await _userRepository.UpdateAsync(x => x.Id == dto.Id, userEntity);
             if (updatedUserEntity != null)
             {
-                //Uppdatering sker nu
                 var userDto = new UserDto(dto.Id, dto.UserName, dto.Email);
                 return userDto;
             }
@@ -108,6 +116,11 @@ public class UserService(UserRepository userRepository)
         return null!;
     }
 
+    /// <summary>
+    /// Deletes a UserEntity
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <returns>Returns true if the entity was deleted, else null.</returns>
     public async Task<bool> DeleteUserAsync(Expression<Func<UserEntity, bool>> expression)
     {
         try

@@ -1,7 +1,5 @@
 ﻿using Infrastructure.Contexts;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client;
-using System;
 using System.Diagnostics;
 using System.Linq.Expressions;
 
@@ -16,8 +14,11 @@ public abstract class BaseRepository<TEntity> where TEntity : class
         _context = context;
     }
 
-
-    //CREATE
+/// <summary>
+/// Adds a new entity to database.
+/// </summary>
+/// <param name="entity">Takes an entity and adds it to the context and saves changes to the database.</param>
+/// <returns>Returns the new entity if succesfull, else null.</returns>
     public virtual async Task<TEntity> CreateAsync(TEntity entity)
     {
         try
@@ -31,7 +32,11 @@ public abstract class BaseRepository<TEntity> where TEntity : class
     }
 
 
-    //READ ONE
+/// <summary>
+/// Gets a specific entity from the database.
+/// </summary>
+/// <param name="expression"></param>
+/// <returns>Returns the entity if exists, else null.</returns>
     public virtual async Task<TEntity> GetAsync(Expression<Func<TEntity, bool>> expression)
     {
         try
@@ -42,18 +47,19 @@ public abstract class BaseRepository<TEntity> where TEntity : class
             {
                 return existingEntity;
             }
-
         }
         catch (Exception ex) { Debug.WriteLine("ERROR :: " + ex.Message); }
         return null!;
     }
 
-    //READ ALL
+/// <summary>
+/// Gets all entities of type 'TEntity'
+/// </summary>
+/// <returns>Returns a list with the existing entities, else null.</returns>
     public virtual async Task<IEnumerable<TEntity>> GetAllAsync()
     {
         try
         {
-            //Hämta entiteterna från databasen
             var existingEntities = await _context.Set<TEntity>().ToListAsync();
             await _context.SaveChangesAsync();
             return existingEntities;
@@ -62,7 +68,12 @@ public abstract class BaseRepository<TEntity> where TEntity : class
         return null!;
     }
 
-    //UPDATE
+/// <summary>
+/// Updates an existing entity from the database.
+/// </summary>
+/// <param name="expression">Uses an expression to find the existing entity.</param>
+/// <param name="updatedEntity">The updated entity</param>
+/// <returns>Returns the updated entity, else null.</returns>
     public virtual async Task<TEntity> UpdateAsync(Expression<Func<TEntity, bool>> expression, TEntity updatedEntity)
     {
         try
@@ -79,13 +90,15 @@ public abstract class BaseRepository<TEntity> where TEntity : class
         return null!;
     }
 
-
-    //DELETE
+/// <summary>
+/// Deletes an existing entity from database.
+/// </summary>
+/// <param name="expression">Uses an expression to fins the entity to delete.</param>
+/// <returns>Returns true if delete was succesful, else false.</returns>
     public virtual async Task<bool> DeleteAsync(Expression<Func<TEntity, bool>> expression)
     {
         try
         {
-            //söker
             var existingEntity = await _context.Set<TEntity>().FirstOrDefaultAsync(expression);
             if (existingEntity != null)
             {
@@ -99,19 +112,19 @@ public abstract class BaseRepository<TEntity> where TEntity : class
 
     }
 
-
-    //Existing entity
+/// <summary>
+/// Checks if a specific entity that matches the given statement, exists in the database
+/// </summary>
+/// <param name="expression">Uses an expression to find the entity</param>
+/// <returns>Returns true if a matching entity exist, else false.</returns>
     public virtual async Task<bool> ExistingAsync(Expression<Func<TEntity, bool>> expression)
     {
         try
         {
-            //finns entiteten?
             var existing = await _context.Set<TEntity>().AnyAsync(expression);
             return existing;
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
         return false;
-
     }
-
 }

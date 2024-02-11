@@ -10,6 +10,11 @@ public class CategoryRepository(DataContext context) : BaseRepository<CategoryEn
 {
     private readonly DataContext _context = context;
 
+    /// <summary>
+    /// This method gets a specific category from the database.
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <returns>A categoryEntity, else null.</returns>
     public override async Task<CategoryEntity> GetAsync(Expression<Func<CategoryEntity, bool>> expression)
     {
         try
@@ -22,21 +27,22 @@ public class CategoryRepository(DataContext context) : BaseRepository<CategoryEn
             {
                 return existingEntity;
             }
-
         }
         catch (Exception ex) { Debug.WriteLine("ERROR :: " + ex.Message); }
         return null!;
     }
 
+    /// <summary>
+    /// A method to get all existing categoryEntities in the database. This method also includes tasks related to each category.
+    /// </summary>
+    /// <returns>Returns the existing categoryentities, else null.</returns>
     public override async Task<IEnumerable<CategoryEntity>> GetAllAsync()
     {
         try
         {
-            //hitta entiteten
             var existingEntities = await _context.Categories
                 .Include(i => i.Tasks)
                 .ToListAsync();
-            //returnera om inte null
             if (existingEntities != null)
             {
                 return existingEntities;

@@ -10,6 +10,11 @@ public class CategoryService(CategoryRepository categoryRepository)
 {
     private readonly CategoryRepository _categoryRepository = categoryRepository;
 
+    /// <summary>
+    /// A method to create a new category with a given name to the database
+    /// </summary>
+    /// <param name="categoryName"></param>
+    /// <returns>True if hte new category was saved to the database, else returns false.</returns>
     public async Task<bool> CreateCategoryAsync(string categoryName)
     {
         try
@@ -28,6 +33,11 @@ public class CategoryService(CategoryRepository categoryRepository)
         return false;
     }
 
+    /// <summary>
+    /// This method gets a categoryEntity from the database, and then converts it to a CategoryDto.
+    /// </summary>
+    /// <param name="predicate"></param>
+    /// <returns>Returns a CategoryDto, else null. </returns>
     public async Task<CategoryDto> GetCategoryAsync(Expression<Func<CategoryEntity, bool>> predicate)
     {
         try
@@ -45,6 +55,10 @@ public class CategoryService(CategoryRepository categoryRepository)
         return null!;
     }
 
+    /// <summary>
+    /// Gets all the Categoryentities from the database, then converts them to a list of CategoryDto.
+    /// </summary>
+    /// <returns>Returns the list of CategoryDto, else null.</returns>
     public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync()
     {
         try
@@ -63,31 +77,37 @@ public class CategoryService(CategoryRepository categoryRepository)
         return null!;
     }
 
+    /// <summary>
+    /// Updates a categoryEntity in the database based on the information in a CategoryDto.
+    /// </summary>
+    /// <param name="updatedCategory"></param>
+    /// <returns>Returns a new CategoryDto with the updated information. Else null with a error-messagge.</returns>
     public async Task<CategoryDto> UpdateCategoryAsync(CategoryDto updatedCategory)
     {
         try
         {
-            //försöker Hämta entitet baserat på Id (den gör en hämtning via BaseRepo) och uppdaterar
             var categoryEntity = new CategoryEntity { Id = updatedCategory.Id, CategoryName = updatedCategory.CategoryName };
             var updatedCategoryEntity = await _categoryRepository.UpdateAsync(x => x.Id == updatedCategory.Id, categoryEntity);
-            //om uppdateringen lyckades
+
             if(updatedCategoryEntity != null)
             {
-                //skapa ny CategoryDto
                 var categoryDto = new CategoryDto(updatedCategory.Id, updatedCategory.CategoryName);
                 return categoryDto;
             }
-
         }
         catch (Exception ex) { Debug.WriteLine("ERROR :: " + (ex.Message)); }
         return null!;
     }
 
+    /// <summary>
+    /// Deletes a categoryEntity from the database, based on Id.
+    /// </summary>
+    /// <param name="categoryId"></param>
+    /// <returns>Returns the result if succesfull, else false.</returns>
     public async Task<bool> DeleteCategoryAsync(int categoryId)
     {
         try
         {
-            // Skapa ett uttryck för att matcha kategori-ID:t
             Expression<Func<CategoryEntity, bool>> expression = c => c.Id == categoryId;
 
             var result = await _categoryRepository.DeleteAsync(expression);
@@ -96,5 +116,4 @@ public class CategoryService(CategoryRepository categoryRepository)
         catch (Exception ex) { Debug.WriteLine("ERROR :: " + (ex.Message)); }
         return false;
     }
-
 }

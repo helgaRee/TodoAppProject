@@ -31,16 +31,5 @@ await consoleUI.CreateTask_UIAsync();
 await consoleUI.GetTasks_UIAsync();
 await consoleUI.GetDetailsTaskAsync();
 await consoleUI.ExitProgramAsync();
-// Skapa en instans av TaskUpdateDto och ge den värden
-var taskToUpdate = new TaskUpdateDto
-{
-    Id = 1, // Tilldela den aktuella uppgiftens ID
-    Title = "Ny titel",
-    Description = "Ny beskrivning",
-    Deadline = "Ny deadline",
-    Status = "Ny status",
-    CategoryName = "Ny kategori",
-    // Fyll i resten av egenskaperna enligt behov
-};
-
 await consoleUI.UpdateTask_UIAsync();
+await consoleUI.GetCategories_UIAsync();

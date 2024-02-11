@@ -10,6 +10,11 @@ public class PriorityRepository(DataContext context) : BaseRepository<PriorityEn
 {
     private readonly DataContext _context = context;
 
+    /// <summary>
+    /// Gets a specific priority from the database, includes related tasks.
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <returns>Returns a priorityEntity, else null.</returns>
     public override async Task<PriorityEntity> GetAsync(Expression<Func<PriorityEntity, bool>> expression)
     {
         try
@@ -22,12 +27,15 @@ public class PriorityRepository(DataContext context) : BaseRepository<PriorityEn
             {
                 return existingEntity;
             }
-
         }
         catch (Exception ex) { Debug.WriteLine("ERROR :: " + ex.Message); }
         return null!;
     }
 
+    /// <summary>
+    /// Gets all priorityEntities in the database, includes all related tasks for each priority.
+    /// </summary>
+    /// <returns>Returns PriorityEntities as a list, else an empty list.</returns>
     public override async Task<IEnumerable<PriorityEntity>> GetAllAsync()
     {
         try

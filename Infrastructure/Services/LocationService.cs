@@ -1,9 +1,7 @@
-﻿using Infrastructure.Dtos;
-using Infrastructure.Entities;
+﻿using Infrastructure.Entities;
 using Infrastructure.Repositories;
 using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
 
 namespace Infrastructure.Services;
 
@@ -11,17 +9,18 @@ public class LocationService(LocationRepository locationRepository)
 {
     private readonly LocationRepository _locationRepository = locationRepository;
 
-
-    //CREATE
+/// <summary>
+/// Creates a new location if it doesnt exist in the database.
+/// </summary>
+/// <param name="entity">Takes in a parameter of locationentity and creates a new from it.</param>
+/// <returns>Returns true if a new location was created succesfully, else false.</returns>
     public async Task<bool> CreateLocationAsync(LocationEntity entity)
     {
         try
         {
-            //skapa location om den inte redan finns
             var locationEntity = await _locationRepository.GetAsync(x => x.Id == entity.Id);
             if (locationEntity == null)
             {
-                //skapa ny location och mappa in egenskaper
                 var newLocation = await _locationRepository.CreateAsync(new LocationEntity
                 {
                     Id = entity.Id,
@@ -35,11 +34,13 @@ public class LocationService(LocationRepository locationRepository)
         }
         catch (Exception ex) { Debug.WriteLine(ex.Message); }
         return false;
-
     }
 
-
-    //GET ONE
+/// <summary>
+/// Gets a specific locationEntity and convert it to a LocationDto
+/// </summary>
+/// <param name="expression">Uses an expression to search</param>
+/// <returns>Returns a locationDto if found, else null.</returns>
     public async Task<LocationDto> GetLocationAsync(Expression<Func<LocationEntity, bool>> expression)
     {
         try
@@ -47,7 +48,6 @@ public class LocationService(LocationRepository locationRepository)
             var locationEntity = await _locationRepository.GetAsync(expression);
             if (locationEntity != null)
             {
-                //om hämtning lyckas, omvandla entiteten till en Dto med Id och Cname
                 var locationDto = new LocationDto(locationEntity.Id, locationEntity.LocationName!, locationEntity.StreetName!, locationEntity.PostalCode!, locationEntity.City!);
                 return locationDto;
             }
@@ -56,9 +56,10 @@ public class LocationService(LocationRepository locationRepository)
         return null!;
     }
 
-
-
-    //GETALL
+/// <summary>
+/// Gets all locations from the database. Converts every LocationEntity to a LocationDto.
+/// </summary>
+/// <returns>Returns the LocationDto's in a list, else null.</returns>
     public async Task<IEnumerable<LocationDto>> GetLocationsAsync()
     {
         try
@@ -79,14 +80,15 @@ public class LocationService(LocationRepository locationRepository)
         return null!;
     }
 
-
-
-    //UPDATE
+    /// <summary>
+    /// Updates an existing location in database. 
+    /// </summary>
+    /// <param name="updatedLocation"></param>
+    /// <returns>Returns the updated LocationDto, else null.</returns>
     public async Task<LocationDto> UpdateLocationAsync(LocationDto updatedLocation)
     {
         try
         {
-            //försöker Hämta entitet baserat på Id (den gör en hämtning via BaseRepo) och uppdaterar
             var locationEntity = new LocationEntity
             {
                 Id = updatedLocation.LocationId,
@@ -94,14 +96,10 @@ public class LocationService(LocationRepository locationRepository)
                 StreetName = updatedLocation.StreetName,
                 PostalCode = updatedLocation.PostalCode,
                 City = updatedLocation.City
-            };
-            
-            //spara in de uppdaterade uppgifterna till den nya Locationen, uppdatera!
+            };         
             var updatedLocationEntity = await _locationRepository.UpdateAsync(x => x.Id == updatedLocation.LocationId, locationEntity);
-            //mappa in
             if (updatedLocationEntity != null)
             {
-                //skapa ny CategoryDto
                 var locationDto = new LocationDto
                     (
                        updatedLocation.LocationId,
@@ -117,7 +115,11 @@ public class LocationService(LocationRepository locationRepository)
         return null!;
     }
 
-
+    /// <summary>
+    /// Deletes a LocationEntity
+    /// </summary>
+    /// <param name="expression"></param>
+    /// <returns>True if delete was succesfull, else false.</returns>
     public async Task<bool> DeleteLocationAsync(Expression<Func<LocationEntity, bool>> expression)
     {
         try

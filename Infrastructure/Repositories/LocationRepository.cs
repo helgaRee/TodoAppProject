@@ -10,6 +10,11 @@ public class LocationRepository(DataContext context) : BaseRepository<LocationEn
 {
     private readonly DataContext _context = context;
 
+    /// <summary>
+    /// This method gets a specific location from the database and includes tasks related to it.
+    /// </summary>
+    /// <param name="expression">Uses an expression to search.</param>
+    /// <returns>Returns a locationEntity if exists, else null.</returns>
     public override async Task<LocationEntity> GetAsync(Expression<Func<LocationEntity, bool>> expression)
     {
         try
@@ -22,21 +27,22 @@ public class LocationRepository(DataContext context) : BaseRepository<LocationEn
             {
                 return existingEntity;
             }
-
         }
         catch (Exception ex) { Debug.WriteLine("ERROR :: " + ex.Message); }
         return null!;
     }
 
+    /// <summary>
+    /// Gets all locations from the database, includes related tasks for each location.
+    /// </summary>
+    /// <returns>Returns existing locationentities in a list, else null.</returns>
     public override async Task<IEnumerable<LocationEntity>> GetAllAsync()
     {
         try
         {
-            //hitta entiteten
             var existingEntities = await _context.Locations
                 .Include(i => i.Tasks)
                 .ToListAsync();
-            //returnera om inte null
             if (existingEntities != null)
             {
                 return existingEntities;
